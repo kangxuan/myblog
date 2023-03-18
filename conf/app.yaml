@@ -1,0 +1,22 @@
+server:
+  mode: "dev"
+  port: 9090
+  read_time_out: 60
+  write_time_out: 60
+
+mysql:
+  host: 192.168.10.33
+  port: 3306
+  user: root
+  pass: 123456
+  db: "myblog"
+  max_open_conn: 100
+  max_idle_conn: 20
+
+redis:
+  host: 192.168.10.33
+  port: 6379
+  pass:
+  db: 0
+  max_idle_conn: 30
+  max_active_conn: 30
