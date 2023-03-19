@@ -1,7 +1,11 @@
 package main
 
-import "myblog/settings"
+import (
+	"myblog/models"
+	"myblog/settings"
+)
 
 func main() {
 	settings.SetUp()
+	models.SetUp()
 }

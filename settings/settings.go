@@ -11,6 +11,8 @@ type ServerConfig struct {
 	Port         int    `mapstructure:"port"`
 	ReadTimeOut  int    `mapstructure:"read_time_out"`
 	WriteTimeOut int    `mapstructure:"write_time_out"`
+	*MysqlConfig `mapstructure:"mysql"`
+	*RedisConfig `mapstructure:"redis"`
 }
 
 var ServerConf = &ServerConfig{}

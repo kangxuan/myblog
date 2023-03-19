@@ -1,8 +1,7 @@
-server:
-  mode: "dev"
-  port: 9090
-  read_time_out: 60
-  write_time_out: 60
+mode: "dev"
+port: 9090
+read_time_out: 60
+write_time_out: 60
 
 mysql:
   host: 192.168.10.33
