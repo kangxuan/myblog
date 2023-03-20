@@ -9,6 +9,7 @@ import (
 type ServerConfig struct {
 	Mode         string `mapstructure:"mode"`
 	Port         int    `mapstructure:"port"`
+	PageSize     int    `mapstructure:"page_size"`
 	ReadTimeOut  int    `mapstructure:"read_time_out"`
 	WriteTimeOut int    `mapstructure:"write_time_out"`
 	*MysqlConfig `mapstructure:"mysql"`
@@ -37,7 +38,8 @@ type RedisConfig struct {
 }
 
 func SetUp() {
-	viper.SetConfigFile("../conf/app.yaml")
+	// viper设置配置文件路径是以根目录为准
+	viper.SetConfigFile("./conf/app.yaml")
 
 	// 观察配置文件是否发生变化
 	viper.WatchConfig()

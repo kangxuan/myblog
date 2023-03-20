@@ -1,5 +1,6 @@
 mode: "dev"
 port: 9090
+page_size: 10
 read_time_out: 60
 write_time_out: 60
 
