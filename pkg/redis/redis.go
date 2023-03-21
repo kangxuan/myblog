@@ -11,11 +11,9 @@ var client *redis.Client
 
 func SetUp() {
 	redisConf := settings.ServerConf.RedisConfig
-	fmt.Println(redisConf.Host, redisConf.Port)
 	client = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", redisConf.Host, redisConf.Port),
-		Password: redisConf.Pass,
-		DB:       redisConf.Db,
+		Addr: fmt.Sprintf("%s:%d", redisConf.Host, redisConf.Port),
+		DB:   redisConf.Db,
 	})
 
 	ctx := context.Background()

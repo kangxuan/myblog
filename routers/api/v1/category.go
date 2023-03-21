@@ -2,7 +2,9 @@ package v1
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
+	"github.com/unknwon/com"
 	"log"
 	"myblog/dao"
 	"myblog/pkg/e"
@@ -35,8 +37,26 @@ func GetCategoryList(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, categoryList)
 }
 
+// GetCategory 获取单个分类
 func GetCategory(c *gin.Context) {
+	appG := util.Gin{C: c}
+	var valid validation.Validation
 
+	categoryId := com.StrTo(c.Query("id")).MustInt()
+	valid.Min(categoryId, 1, "id").Message("分类ID小于1")
+
+	if valid.HasErrors() {
+		appG.Response(http.StatusOK, e.ERROR, nil)
+		return
+	}
+
+	category, err := dao.GetCategoryById(categoryId)
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, category)
 }
 
 func CreateCategory(c *gin.Context) {
