@@ -9,10 +9,13 @@ type Gin struct {
 	C *gin.Context
 }
 
-func (c *Gin) Response(httpCode int, errCode int, data interface{}) {
+func (c *Gin) Response(httpCode int, errCode int, msg string, data interface{}) {
+	if msg == "" {
+		msg = e.GetMsg(errCode)
+	}
 	c.C.JSON(httpCode, gin.H{
 		"code": errCode,
-		"msg":  e.GetMsg(errCode),
+		"msg":  msg,
 		"data": data,
 	})
 }

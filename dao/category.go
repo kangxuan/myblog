@@ -2,6 +2,7 @@ package dao
 
 import (
 	"myblog/models"
+	"time"
 )
 
 // GetCategoryList 获取分类列表
@@ -44,4 +45,25 @@ func GetCategoryById(categoryId int) (category *models.Category, err error) {
 	}
 
 	return category, nil
+}
+
+// InsertCategory 插入分类
+func InsertCategory(category models.Category) (int64, error) {
+	currentTime := time.Time{}
+	sqlStr := "insert into category(category_name, category_type, parent_id, create_time, update_time) values (:category_name, :category_type, :parent_id, :create_time, :update_time)"
+	result, err := models.Db.NamedExec(sqlStr, map[string]interface{}{
+		"category_name": category.CategoryName,
+		"category_type": category.CategoryType,
+		"parent_id":     category.ParentId,
+		"create_time":   currentTime.Unix(),
+		"update_time":   currentTime.Unix(),
+	})
+	if err != nil {
+		return 0, err
+	}
+	lastCategoryId, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return lastCategoryId, nil
 }
