@@ -49,14 +49,14 @@ func GetCategoryById(categoryId int) (category *models.Category, err error) {
 
 // InsertCategory 插入分类
 func InsertCategory(category models.Category) (int64, error) {
-	currentTime := time.Time{}
+	currentTime := time.Now().Unix()
 	sqlStr := "insert into category(category_name, category_type, parent_id, create_time, update_time) values (:category_name, :category_type, :parent_id, :create_time, :update_time)"
 	result, err := models.Db.NamedExec(sqlStr, map[string]interface{}{
 		"category_name": category.CategoryName,
 		"category_type": category.CategoryType,
 		"parent_id":     category.ParentId,
-		"create_time":   currentTime.Unix(),
-		"update_time":   currentTime.Unix(),
+		"create_time":   currentTime,
+		"update_time":   currentTime,
 	})
 	if err != nil {
 		return 0, err
