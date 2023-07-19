@@ -9,7 +9,6 @@ import (
 	"myblog/models"
 	"myblog/pkg/e"
 	"myblog/pkg/util"
-	"myblog/settings"
 	"net/http"
 	"reflect"
 )
@@ -18,23 +17,24 @@ func GetCategoryList(c *gin.Context) {
 	appG := util.Gin{
 		C: c,
 	}
-	maps := make(map[string]interface{})
+	maps := make(map[string]string)
 
 	if arg := c.Query("category_name"); arg != "" {
 		maps["category_name"] = arg
 	}
-
-	maps["page"] = util.GetPage(c)
-	maps["page_size"] = settings.ServerConf.PageSize
-	fmt.Println(maps)
+	maps["page"] = c.DefaultQuery("page", "1")
+	maps["page_size"] = c.DefaultQuery("page_size", "10")
 
 	categoryList, err := dao.GetCategoryList(maps)
 	if err != nil {
-		appG.Response(http.StatusOK, e.ERROR, "", nil)
+		appG.Response(http.StatusOK, e.ERROR, "获取分类列表失败", nil)
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, "", categoryList)
+	appG.Response(http.StatusOK, e.SUCCESS, "", map[string]interface{}{
+		"list": categoryList,
+		"page": dao.GetCategoryPage(maps),
+	})
 }
 
 // GetCategory 获取单个分类
@@ -42,11 +42,13 @@ func GetCategory(c *gin.Context) {
 	appG := util.Gin{C: c}
 	var valid validation.Validation
 
-	categoryId := com.StrTo(c.Query("id")).MustInt()
-	valid.Min(categoryId, 1, "id").Message("分类ID小于1")
+	categoryId := com.StrTo(c.Param("id")).MustInt()
+	fmt.Println("category_id:", categoryId)
+	valid.Min(categoryId, 0, "id").Message("分类ID小于1")
 
-	if valid.HasErrors() {
-		appG.Response(http.StatusOK, e.INVALID_PARAMS, "", nil)
+	hasError, msg := util.GetValidationMessage(valid)
+	if hasError {
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, msg, nil)
 		return
 	}
 
@@ -90,7 +92,7 @@ func CreateCategory(c *gin.Context) {
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, "", map[string]int64{
+	appG.Response(http.StatusOK, e.SUCCESS, "", map[string]int{
 		"category_id": lastCategoryId,
 	})
 }

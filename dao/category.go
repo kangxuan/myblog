@@ -1,69 +1,87 @@
 package dao
 
 import (
+	"errors"
+	"fmt"
+	"gorm.io/gorm"
 	"myblog/models"
+	"myblog/pkg/util"
 	"time"
 )
 
+type CategoryColumns struct {
+	CategoryId    int    `json:"category_id"`
+	CategoryType  int    `json:"category_type"`
+	CategoryName  string `json:"category_name"`
+	ParentId      int    `json:"parent_id"`
+	CreateTime    int    `json:"create_time"`
+	UpdateTime    int    `json:"update_time"`
+	CreateTimeStr string `json:"create_time_str"`
+	UpdateTimeStr string `json:"update_time_str"`
+}
+
 // GetCategoryList 获取分类列表
-func GetCategoryList(maps map[string]interface{}) (categoryList []*models.Category, err error) {
-	var args []interface{}
-	args = append(args, 0)
-
-	sqlStr := "select category_id, category_name, parent_id, create_time from category where is_delete = ?"
-
-	if _, ok := maps["category_name"]; ok && maps["category_name"] != "" {
-		sqlStr += " and category_name like '%?%"
-		args = append(args, maps["category_name"])
-	}
-
-	if _, ok := maps["page_size"]; ok {
-		sqlStr += " limit ?"
-		args = append(args, maps["page_size"])
-	}
-
-	if _, ok := maps["page"]; ok {
-		sqlStr += " offset ?"
-		args = append(args, maps["page"])
-	}
-
-	err = models.Db.Select(&categoryList, sqlStr, args...)
-	if err != nil {
-		return nil, err
+func GetCategoryList(params map[string]string) (categoryList []*CategoryColumns, err error) {
+	query := getCategoryQuery(params)
+	util.Pagination(query, params).Find(&categoryList)
+	for k, cat := range categoryList {
+		categoryList[k].CreateTimeStr = util.TimeToString(cat.CreateTime)
+		categoryList[k].UpdateTimeStr = util.TimeToString(cat.UpdateTime)
 	}
 
 	return categoryList, nil
 }
 
-// GetCategoryById 根据ID获取分类
-func GetCategoryById(categoryId int) (category *models.Category, err error) {
-	sqlStr := "select category_id, category_name, parent_id, create_time from category where is_delete = ? and category_id = ?"
+// GetCategoryPage 获取分类分页
+func GetCategoryPage(params map[string]string) (page map[string]interface{}) {
+	fmt.Println(params)
+	query := getCategoryQuery(params)
+	page = util.Page(query, params)
+	return
+}
 
-	err = models.Db.Get(&category, sqlStr, 0, categoryId)
-	if err != nil {
-		return nil, err
+// getCategoryQuery 分类通用的查询器
+func getCategoryQuery(params map[string]string) *gorm.DB {
+	whereMaps := map[string]interface{}{}
+	whereMaps["is_delete"] = 0
+	if _, ok := params["category_name"]; ok && params["category_name"] != "" {
+		whereMaps["category_name"] = params["category_name"]
 	}
 
-	return category, nil
+	return models.Db.Table("category").Where(whereMaps).Order("category_id desc")
+}
+
+// GetCategoryById 根据ID获取分类
+func GetCategoryById(categoryId int) (category *CategoryColumns, err error) {
+	result := models.Db.Table("category").Limit(1).Where("category_id = ?", categoryId).Find(&category)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	category.CreateTimeStr = util.TimeToString(category.CreateTime)
+	category.UpdateTimeStr = util.TimeToString(category.UpdateTime)
+	return
 }
 
 // InsertCategory 插入分类
-func InsertCategory(category models.Category) (int64, error) {
+func InsertCategory(categoryParams models.Category) (int, error) {
+	// 判断分类名称是否已经存在
+	existedNum := models.Db.Table("category").Where("category_name = ?", categoryParams.CategoryName).Find(&models.Category{}).RowsAffected
+	if existedNum > 0 {
+		err := errors.New("分类名称已存在")
+		return 0, err
+	}
+	// 新增数据
 	currentTime := time.Now().Unix()
-	sqlStr := "insert into category(category_name, category_type, parent_id, create_time, update_time) values (:category_name, :category_type, :parent_id, :create_time, :update_time)"
-	result, err := models.Db.NamedExec(sqlStr, map[string]interface{}{
-		"category_name": category.CategoryName,
-		"category_type": category.CategoryType,
-		"parent_id":     category.ParentId,
-		"create_time":   currentTime,
-		"update_time":   currentTime,
-	})
-	if err != nil {
-		return 0, err
+	category := models.Category{
+		CategoryName: categoryParams.CategoryName,
+		CategoryType: categoryParams.CategoryType,
+		ParentId:     categoryParams.ParentId,
+		CreateTime:   int(currentTime),
+		UpdateTime:   int(currentTime),
 	}
-	lastCategoryId, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
+	result := models.Db.Table("category").Create(&category)
+	if result.Error != nil {
+		return 0, result.Error
 	}
-	return lastCategoryId, nil
+	return category.CategoryId, nil
 }
