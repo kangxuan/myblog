@@ -85,3 +85,38 @@ func InsertCategory(categoryParams models.Category) (int, error) {
 	}
 	return category.CategoryId, nil
 }
+
+// UpdateCategory 更新分类
+func UpdateCategory(id int, categoryParams models.Category) error {
+	// 判断分类ID是否存在
+	existedNum := models.Db.Table("category").Where("category_id = ? and is_delete = 0", id).Find(&models.Category{}).RowsAffected
+	if existedNum == 0 {
+		return errors.New("分类ID不存在")
+	}
+	// 判断分类名称是否存在
+	nameExistedNum := models.Db.Table("category").Where("category_id <> ? and category_name = ?", id, categoryParams.CategoryName).Find(&models.Category{}).RowsAffected
+	if nameExistedNum > 0 {
+		return errors.New("分类名称已经存在")
+	}
+
+	// 修改数据
+	result := models.Db.Table("category").Model(&categoryParams).Where("category_id = ?", id).Updates(&models.Category{
+		CategoryName: categoryParams.CategoryName,
+		CategoryType: categoryParams.CategoryType,
+		ParentId:     categoryParams.ParentId,
+		UpdateTime:   int(time.Now().Unix()),
+	})
+	return result.Error
+}
+
+// DeleteCategory 删除分类
+func DeleteCategory(id int) error {
+	result := models.Db.Table("category").Where("category_id = ?", id).Update("is_delete", 1)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("没有要删除的分类")
+	}
+	return nil
+}

@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
@@ -10,7 +11,7 @@ import (
 	"myblog/pkg/e"
 	"myblog/pkg/util"
 	"net/http"
-	"reflect"
+	"strconv"
 )
 
 func GetCategoryList(c *gin.Context) {
@@ -64,26 +65,16 @@ func GetCategory(c *gin.Context) {
 // CreateCategory 创建分类
 func CreateCategory(c *gin.Context) {
 	appG := util.Gin{C: c}
-	var valid validation.Validation
 
 	var categoryParams models.Category
 	err := c.BindJSON(&categoryParams)
 	if err != nil {
-		appG.Response(http.StatusOK, e.ERROR, "4234234", nil)
+		appG.Response(http.StatusOK, e.ERROR, "参数解析错误", nil)
 		return
 	}
-
-	fmt.Println(reflect.TypeOf(categoryParams.CategoryType))
-	valid.Required(categoryParams.CategoryName, "category_name").Message("分类名称不能为空")
-	valid.MaxSize(categoryParams.CategoryName, 20, "category_name").Message("分类名称长度不能超过20个字")
-	valid.Required(categoryParams.CategoryType, "category_type").Message("分类类型不能为空")
-	valid.Range(categoryParams.CategoryType, 1, 3, "category_type").Message("分类类型错误")
-	valid.Min(categoryParams.ParentId, 0, "parent_id").Message("父级ID错误")
-
-	hasError, msg := util.GetValidationMessage(valid)
-	if hasError {
-		appG.Response(http.StatusOK, e.INVALID_PARAMS, msg, nil)
-		return
+	err = checkParams(categoryParams)
+	if err != nil {
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, err.Error(), nil)
 	}
 
 	lastCategoryId, err := dao.InsertCategory(categoryParams)
@@ -97,10 +88,57 @@ func CreateCategory(c *gin.Context) {
 	})
 }
 
+// UpdateCategory 更新分类
 func UpdateCategory(c *gin.Context) {
+	appG := util.Gin{C: c}
+	var categoryParams models.Category
+	id, _ := strconv.Atoi(c.Param("id"))
+	err := c.BindJSON(&categoryParams)
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR, "参数解析错误", nil)
+		return
+	}
 
+	err = checkParams(categoryParams)
+	if err != nil {
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, err.Error(), nil)
+		return
+	}
+
+	err = dao.UpdateCategory(id, categoryParams)
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR, err.Error(), nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, "", nil)
 }
 
+// DeleteCategory 删除分类
 func DeleteCategory(c *gin.Context) {
+	appG := util.Gin{C: c}
+	id, _ := strconv.Atoi(c.Param("id"))
 
+	err := dao.DeleteCategory(id)
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR, err.Error(), nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, "删除成功", nil)
+}
+
+// checkParams 检查参数
+func checkParams(categoryParams models.Category) error {
+	var valid validation.Validation
+	valid.Required(categoryParams.CategoryName, "category_name").Message("分类名称不能为空")
+	valid.MaxSize(categoryParams.CategoryName, 20, "category_name").Message("分类名称长度不能超过20个字")
+	valid.Required(categoryParams.CategoryType, "category_type").Message("分类类型不能为空")
+	valid.Range(categoryParams.CategoryType, 1, 3, "category_type").Message("分类类型错误")
+	valid.Min(categoryParams.ParentId, 0, "parent_id").Message("父级ID错误")
+	hasError, msg := util.GetValidationMessage(valid)
+	if hasError {
+		return errors.New(msg)
+	}
+	return nil
 }
