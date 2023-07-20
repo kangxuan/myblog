@@ -72,7 +72,7 @@ func CreateCategory(c *gin.Context) {
 		appG.Response(http.StatusOK, e.ERROR, "参数解析错误", nil)
 		return
 	}
-	err = checkParams(categoryParams)
+	err = checkCategoryParams(categoryParams)
 	if err != nil {
 		appG.Response(http.StatusOK, e.INVALID_PARAMS, err.Error(), nil)
 	}
@@ -99,7 +99,7 @@ func UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	err = checkParams(categoryParams)
+	err = checkCategoryParams(categoryParams)
 	if err != nil {
 		appG.Response(http.StatusOK, e.INVALID_PARAMS, err.Error(), nil)
 		return
@@ -128,8 +128,8 @@ func DeleteCategory(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, "删除成功", nil)
 }
 
-// checkParams 检查参数
-func checkParams(categoryParams models.Category) error {
+// checkCategoryParams 检查参数
+func checkCategoryParams(categoryParams models.Category) error {
 	var valid validation.Validation
 	valid.Required(categoryParams.CategoryName, "category_name").Message("分类名称不能为空")
 	valid.MaxSize(categoryParams.CategoryName, 20, "category_name").Message("分类名称长度不能超过20个字")

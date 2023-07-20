@@ -16,6 +16,11 @@ func SetUpRouter() *gin.Engine {
 		apiV1.POST("/category", v1.CreateCategory)
 		apiV1.PUT("/category/:id", v1.UpdateCategory)
 		apiV1.DELETE("/category/:id", v1.DeleteCategory)
+
+		apiV1.GET("/tag", v1.GetTagList)
+		apiV1.POST("/tag", v1.CreateTag)
+		apiV1.PUT("/tag/:id", v1.UpdateTag)
+		apiV1.DELETE("/tag/:id", v1.DeleteTag)
 	}
 
 	return r

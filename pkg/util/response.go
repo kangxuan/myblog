@@ -19,3 +19,14 @@ func (c *Gin) Response(httpCode int, errCode int, msg string, data interface{}) 
 		"data": data,
 	})
 }
+
+func Response(c *gin.Context, httpCode int, errCode int, msg string, data interface{}) {
+	if msg == "" {
+		msg = e.GetMsg(errCode)
+	}
+	c.JSON(httpCode, gin.H{
+		"code": errCode,
+		"msg":  msg,
+		"data": data,
+	})
+}
