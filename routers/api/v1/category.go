@@ -14,19 +14,17 @@ import (
 	"strconv"
 )
 
+// GetCategoryList 获取分类列表
 func GetCategoryList(c *gin.Context) {
 	appG := util.Gin{
 		C: c,
 	}
-	maps := make(map[string]string)
+	searchParams := new(models.CategorySearchColumns)
+	searchParams.CategoryName = c.DefaultQuery("category_name", "")
+	searchParams.Page, _ = strconv.Atoi(c.DefaultQuery("page", "1"))
+	searchParams.PageSize, _ = strconv.Atoi(c.DefaultQuery("page_size", "10"))
 
-	if arg := c.Query("category_name"); arg != "" {
-		maps["category_name"] = arg
-	}
-	maps["page"] = c.DefaultQuery("page", "1")
-	maps["page_size"] = c.DefaultQuery("page_size", "10")
-
-	categoryList, err := dao.GetCategoryList(maps)
+	categoryList, err := dao.GetCategoryList(searchParams)
 	if err != nil {
 		appG.Response(http.StatusOK, e.ERROR, "获取分类列表失败", nil)
 		return
@@ -34,7 +32,7 @@ func GetCategoryList(c *gin.Context) {
 
 	appG.Response(http.StatusOK, e.SUCCESS, "", map[string]interface{}{
 		"list": categoryList,
-		"page": dao.GetCategoryPage(maps),
+		"page": dao.GetCategoryPage(searchParams),
 	})
 }
 

@@ -18,15 +18,13 @@ func getOffset(page, pageSize int) int {
 }
 
 // Pagination 分页程序
-func Pagination(db *gorm.DB, params map[string]string) *gorm.DB {
-	page, pageSize := handlePageParams(params)
+func Pagination(db *gorm.DB, page, pageSize int) *gorm.DB {
 	return db.Limit(pageSize).Offset(getOffset(page, pageSize))
 }
 
 // Page 分页数据
-func Page(db *gorm.DB, params map[string]string) (pageResult map[string]interface{}) {
+func Page(db *gorm.DB, page, pageSize int) (pageResult map[string]interface{}) {
 	var count int64
-	page, pageSize := handlePageParams(params)
 	db.Count(&count)
 	pageResult = map[string]interface{}{
 		"count":   count,

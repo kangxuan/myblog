@@ -3,12 +3,18 @@ package models
 import "time"
 
 type Category struct {
-	CategoryId   int       `db:"category_id" json:"category_id"`
-	CategoryType int       `db:"category_type" json:"category_type"`
-	CategoryName string    `db:"category_name" json:"category_name"`
-	ParentId     int       `db:"parent_id" json:"parent_id"`
-	IsDelete     int       `db:"is_delete" json:"is_delete"`
-	CreateTime   int       `db:"create_time" json:"create_time"`
-	UpdateTime   int       `db:"update_time" json:"update_time"`
-	UpdateAt     time.Time `db:"update_at" json:"update_at"`
+	CategoryId   int       `gorm:"primaryKey" json:"category_id"`
+	CategoryType int       `json:"category_type"`
+	CategoryName string    `json:"category_name"`
+	ParentId     int       `json:"parent_id"`
+	IsDelete     int       `json:"is_delete"`
+	CreateTime   int       `json:"create_time"`
+	UpdateTime   int       `json:"update_time"`
+	UpdateAt     time.Time `json:"update_at"`
+}
+
+type CategorySearchColumns struct {
+	CategoryName string
+	Page         int
+	PageSize     int
 }

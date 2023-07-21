@@ -2,7 +2,6 @@ package dao
 
 import (
 	"errors"
-	"fmt"
 	"gorm.io/gorm"
 	"myblog/models"
 	"myblog/pkg/util"
@@ -21,9 +20,9 @@ type CategoryColumns struct {
 }
 
 // GetCategoryList 获取分类列表
-func GetCategoryList(params map[string]string) (categoryList []*CategoryColumns, err error) {
-	query := getCategoryQuery(params)
-	util.Pagination(query, params).Find(&categoryList)
+func GetCategoryList(searchParams *models.CategorySearchColumns) (categoryList []*CategoryColumns, err error) {
+	query := getCategoryQuery(searchParams)
+	util.Pagination(query, searchParams.Page, searchParams.PageSize).Find(&categoryList)
 	for k, cat := range categoryList {
 		categoryList[k].CreateTimeStr = util.TimeToString(cat.CreateTime)
 		categoryList[k].UpdateTimeStr = util.TimeToString(cat.UpdateTime)
@@ -33,19 +32,17 @@ func GetCategoryList(params map[string]string) (categoryList []*CategoryColumns,
 }
 
 // GetCategoryPage 获取分类分页
-func GetCategoryPage(params map[string]string) (page map[string]interface{}) {
-	fmt.Println(params)
-	query := getCategoryQuery(params)
-	page = util.Page(query, params)
+func GetCategoryPage(searchParams *models.CategorySearchColumns) (page map[string]interface{}) {
+	query := getCategoryQuery(searchParams)
+	page = util.Page(query, searchParams.Page, searchParams.PageSize)
 	return
 }
 
 // getCategoryQuery 分类通用的查询器
-func getCategoryQuery(params map[string]string) *gorm.DB {
+func getCategoryQuery(searchParams *models.CategorySearchColumns) *gorm.DB {
 	whereMaps := map[string]interface{}{}
-	whereMaps["is_delete"] = 0
-	if _, ok := params["category_name"]; ok && params["category_name"] != "" {
-		whereMaps["category_name"] = params["category_name"]
+	if searchParams.CategoryName != "" {
+		whereMaps["category_name"] = searchParams.CategoryName
 	}
 
 	return models.Db.Table("category").Where(whereMaps).Order("category_id desc")
